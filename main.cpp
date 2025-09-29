@@ -24,8 +24,7 @@ FCharacter Characters[3];
 
 int KeyCode;
 
-HANDLE FrontBufferHandle;
-HANDLE BackBufferHandle;
+HANDLE ScreenBuffers[2];
 
 void Input()
 {
@@ -41,19 +40,8 @@ void RenderCharacter(const FCharacter* InData)
 	//Position.Y = (SHORT)(*InData).Y;
 	Position.Y = (SHORT)InData->Y;
 
-
-	if (CurrentBufferIndex == FrontBuffer)
-	{
-		SetConsoleCursorPosition(FrontBufferHandle, Position);
-		WriteConsole(FrontBufferHandle, InData->Shape.c_str(), 1, NULL, NULL);
-	}
-	else
-	{
-		SetConsoleCursorPosition(BackBufferHandle, Position);
-		WriteConsole(BackBufferHandle, InData->Shape.c_str(), 1, NULL, NULL);
-	}
-
-
+	SetConsoleCursorPosition(ScreenBuffers[CurrentBufferIndex], Position);
+	WriteConsole(ScreenBuffers[CurrentBufferIndex], InData->Shape.c_str(), 1, NULL, NULL);
 }
 
 void Clear()
@@ -63,39 +51,19 @@ void Clear()
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	DWORD dwConSize;
 
-	if (CurrentBufferIndex == FrontBuffer)
-	{
-		//스크린 버퍼 정보 가져오기
-		GetConsoleScreenBufferInfo(FrontBufferHandle, &csbi);
-		dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
-		FillConsoleOutputCharacter(FrontBufferHandle,
-			(TCHAR)' ',
-			dwConSize,
-			coordScreen,
-			&cCharsWritten);
-	}
-	else
-	{
-		GetConsoleScreenBufferInfo(BackBufferHandle, &csbi);
-		dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
-		FillConsoleOutputCharacter(BackBufferHandle,
-			(TCHAR)' ',
-			dwConSize,
-			coordScreen,
-			&cCharsWritten);
-	}
+	//스크린 버퍼 정보 가져오기
+	GetConsoleScreenBufferInfo(ScreenBuffers[CurrentBufferIndex], &csbi);
+	dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
+	FillConsoleOutputCharacter(ScreenBuffers[CurrentBufferIndex],
+		(TCHAR)' ',
+		dwConSize,
+		coordScreen,
+		&cCharsWritten);
 }
 
 void Present()
 {
-	if (CurrentBufferIndex == FrontBuffer)
-	{
-		SetConsoleActiveScreenBuffer(FrontBufferHandle);
-	}
-	else
-	{
-		SetConsoleActiveScreenBuffer(BackBufferHandle);
-	}
+	SetConsoleActiveScreenBuffer(ScreenBuffers[CurrentBufferIndex]);
 
 	CurrentBufferIndex++;
 	CurrentBufferIndex = CurrentBufferIndex % 2;
@@ -106,9 +74,9 @@ void Present()
 //렌더 모든 캐릭터를 
 void Render()
 {
-	//그래픽 카드 그리는 방식
 	Clear();
 
+	//RenderAll
 	for (int i = 0; i < 2; ++i)
 	{
 		RenderCharacter(&Characters[i]);
@@ -119,11 +87,9 @@ void Render()
 
 void Init()
 {
-	//0
-	FrontBufferHandle = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, nullptr, CONSOLE_TEXTMODE_BUFFER, NULL);
+	ScreenBuffers[0] = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, nullptr, CONSOLE_TEXTMODE_BUFFER, NULL);
 
-	//1
-	BackBufferHandle = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, nullptr, CONSOLE_TEXTMODE_BUFFER, NULL);
+	ScreenBuffers[1] = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, nullptr, CONSOLE_TEXTMODE_BUFFER, NULL);
 
 	//형변환, Casting
 	srand((unsigned int)time(nullptr));
