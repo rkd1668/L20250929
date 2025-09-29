@@ -34,21 +34,22 @@ bool Predict(int NewX, int NewY)
 	return true;
 }
 
-void RenderCharacter(FCharacter InData)
+void RenderCharacter(FCharacter* InData)
 {
 	COORD Position;
-	Position.X = InData.X;
-	Position.Y = InData.Y;
+	Position.X = (SHORT)InData -> X;
+	Position.Y = (SHORT)InData -> Y;
 
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Position);
-	cout << InData.Shape;
+	cout << InData -> Shape;
 }
 
 void Render()
 {
+	system("cls");
 	for (int i = 0; i < 3; i++)
 	{
-		RenderCharacter(Characters[i]);
+		RenderCharacter(&Characters[i]);
 	}
 }
 
